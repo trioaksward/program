@@ -50,6 +50,15 @@
     h1 { font-size: 32px; }
     h2 { font-size: 24px; padding: 40px 0 4px; }
 
+    .hero img {
+      display: block;
+      width: min(300px, 72vw);
+      height: auto;
+      margin: 20px auto 0;
+      border-radius: 14px;
+      box-shadow: 0 10px 30px rgba(4, 38, 48, 0.18);
+    }
+
     .date-nav {
       display: flex;
       align-items: center;
@@ -157,7 +166,12 @@
 </head>
 <body>
 <main>
-  <div class="eyebrow">Tri Oaks Ward · Sacrament Meeting</div>
+  <div class="eyebrow">Tri Oaks Ward · Sacrament Service</div>
+
+  <picture class="hero">
+    <source srcset="remember_jesus_sacrament.avif" type="image/avif">
+    <img src="remember_jesus_sacrament.jpg" width="640" height="800" alt="Jesus Christ breaking bread">
+  </picture>
 
   <div class="date-nav">
     <button class="arrow" id="prev" aria-label="Previous program" disabled>
@@ -184,8 +198,9 @@
   // Read-only Apps Script endpoint (ProgramAdmin project). Returns { ok, upcoming, dates, program }.
   var API_URL = 'https://script.google.com/macros/s/AKfycbwbfE5bAvaC2rSJs-HMSCQ8Gc9xCJl7-Pk-W66HXUu0MBwJgPHzSMPxdVXv23gLjpet/exec';
   var CACHE_PREFIX = 'program:';
+  var REFRESH_MS = 10 * 60 * 1000; // re-check the sheet while the page stays open
 
-  var state = { dates: [], current: null, loadSeq: 0 };
+  var state = { dates: [], current: null, requested: '', shownJson: '', loadSeq: 0 };
   var el = function(id) { return document.getElementById(id); };
 
   // ── Data ────────────────────────────────────────────────────────────────
@@ -197,14 +212,15 @@
     try { localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data)); } catch (e) {}
   }
 
-  function load(date, push) {
+  // silent: background re-check of the page being viewed — no spinner, no error message.
+  function load(date, push, silent) {
     var seq = ++state.loadSeq;
     var key = date || 'current';
 
     // Show the last copy we saw right away, then refresh from the sheet.
-    var cached = cacheGet(key);
+    var cached = silent ? null : cacheGet(key);
     if (cached) show(cached, date, push);
-    else if (state.current) el('program').classList.add('loading');
+    else if (state.current && !silent) el('program').classList.add('loading');
 
     fetch(API_URL + (date ? '?date=' + encodeURIComponent(date) : ''))
       .then(function(res) { return res.json(); })
@@ -215,7 +231,7 @@
         show(data, date, push && !cached);
       })
       .catch(function() {
-        if (seq !== state.loadSeq || cached) return;
+        if (seq !== state.loadSeq || cached || silent) return;
         el('program').classList.remove('loading');
         el('program').innerHTML =
           '<div class="status">Unable to load the program right now.<br><button id="retry">Try again</button></div>';
@@ -224,6 +240,10 @@
   }
 
   function show(data, requested, push) {
+    var json = JSON.stringify(data);
+    if (!push && json === state.shownJson && requested === state.requested) return; // nothing changed
+    state.shownJson = json;
+    state.requested = requested || '';
     state.dates = data.dates || [];
     var p = data.program;
     state.current = p ? p.date : (requested || data.upcoming);
@@ -385,6 +405,16 @@
   };
   el('pickerClose').onclick = function() { el('picker').close(); };
   el('picker').addEventListener('click', function(e) { if (e.target === el('picker')) el('picker').close(); });
+
+  // ── Keep an open page up to date ────────────────────────────────────────
+  // There's no way to push changes to an open page, so re-check when the viewer comes back
+  // to it (e.g. unlocks their phone) and periodically while it's visible.
+
+  function refresh() {
+    if (document.visibilityState === 'visible' && !el('picker').open) load(state.requested, false, true);
+  }
+  document.addEventListener('visibilitychange', refresh);
+  setInterval(refresh, REFRESH_MS);
 
   // ── Start ───────────────────────────────────────────────────────────────
 
