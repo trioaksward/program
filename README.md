@@ -37,6 +37,9 @@ Regular Sundays always show at least 2 speakers.
 | Primary Program, Christmas Program, Easter Program | A heading and short description instead of speakers |
 | Ward Conference, Mother's Day Program, Under Stake Direction, anything else | A normal program with speakers, labeled with the value |
 
+Special images (640×800, cropped 4:5) replace the default picture for General and Stake Conference (the Christus),
+Temple Dedication, Primary, Christmas, Easter and Mother's Day programs. They're set in `IMAGES` / `TYPES` in `index.html`.
+
 ### Program Details (one cell; press Ctrl/Cmd + Enter for a new line)
 
 ```
