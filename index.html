@@ -50,10 +50,14 @@
     h1 { font-size: 32px; }
     h2 { font-size: 24px; padding: 40px 0 4px; }
 
+    .hero { display: block; transition: opacity 0.25s; }
+    .hero.pending { opacity: 0; }        /* hidden until we know which Sunday (and image) is shown */
     .hero img {
       display: block;
       width: min(300px, 72vw);
       height: auto;
+      aspect-ratio: 4 / 5;
+      object-fit: cover;
       margin: 20px auto 0;
       border-radius: 14px;
       box-shadow: 0 10px 30px rgba(4, 38, 48, 0.18);
@@ -194,9 +198,9 @@
 <main>
   <div class="eyebrow">Tri Oaks Ward · Sacrament Service</div>
 
-  <picture class="hero">
-    <source srcset="remember_jesus_sacrament.avif" type="image/avif">
-    <img src="remember_jesus_sacrament.jpg" width="640" height="800" alt="Jesus Christ breaking bread">
+  <picture class="hero pending" id="hero">
+    <source id="heroAvif" srcset="remember_jesus_sacrament.avif" type="image/avif">
+    <img id="heroImg" src="remember_jesus_sacrament.jpg" width="640" height="800" alt="Jesus Christ breaking bread">
   </picture>
 
   <div class="date-nav">
@@ -227,25 +231,36 @@
   //   alt     — ward meeting where `heading` (+ `text`) replaces the speakers
   //   regular — ward meeting with speakers (at least 2)
   var TYPES = {
-    'general conference': { kind: 'none', tag: 'Gen Conf', invite: 'watch General Conference' },
-    'stake conference': { kind: 'none', tag: 'Stake Conf', invite: 'attend Stake Conference' },
-    'temple dedication': { kind: 'none', tag: 'Temple', reason: 'in observance of the temple dedication' },
+    'general conference': { kind: 'none', tag: 'Gen Conf', invite: 'watch General Conference', image: 'christus' },
+    'stake conference': { kind: 'none', tag: 'Stake Conf', invite: 'attend Stake Conference', image: 'christus' },
+    'temple dedication': { kind: 'none', tag: 'Temple', reason: 'in observance of the temple dedication', image: 'temple' },
     'fast sunday': { kind: 'alt', tag: 'Fast', heading: 'Bearing of Testimonies' },
     'musical testimony meeting': { kind: 'alt', tag: 'Musical', heading: 'Hymns of Testimony',
       text: 'Members share a brief testimony and a favorite hymn, which the congregation then sings together.' },
     'primary program': { kind: 'alt', tag: 'Primary', heading: 'Primary Program',
-      text: 'Presented by the children of the Tri Oaks Ward Primary' },
+      text: 'Presented by the children of the Tri Oaks Ward Primary', image: 'children' },
     'christmas program': { kind: 'alt', tag: 'Christmas', heading: 'Christmas Program',
-      text: 'A program of music and the spoken word celebrating the birth of Jesus Christ' },
+      text: 'A program of music and the spoken word celebrating the birth of Jesus Christ', image: 'nativity' },
     'easter program': { kind: 'alt', tag: 'Easter', heading: 'Easter Program',
-      text: 'A program of music and the spoken word celebrating the Resurrection of Jesus Christ' },
+      text: 'A program of music and the spoken word celebrating the Resurrection of Jesus Christ', image: 'resurrection' },
     'ward conference': { kind: 'regular', tag: 'Ward Conf' },
-    "mother's day program": { kind: 'regular', tag: "Mother's Day" },
+    "mother's day program": { kind: 'regular', tag: "Mother's Day", image: 'mother' },
     'under stake direction': { kind: 'regular', tag: 'Stake' },
     'under the direction of the stake': { kind: 'regular', tag: 'Stake' },
     'no special program': { kind: 'regular' }
   };
   var MIN_SPEAKERS = 2;
+
+  // Page images (640×800). Sundays whose type has no `image` use the default.
+  var IMAGES = {
+    'default': { file: 'remember_jesus_sacrament', avif: true, alt: 'Jesus Christ breaking bread' },
+    christus: { file: 'christus_statue_visitors_center', alt: 'The Christus statue' },
+    temple: { file: 'layton_utah_temple_exterior', alt: 'The Layton Utah Temple' },
+    children: { file: 'christ_and_the_nephite_children', alt: 'Jesus Christ with the Nephite children' },
+    nativity: { file: 'jesus_birth_nativity', alt: 'The birth of Jesus Christ' },
+    resurrection: { file: 'mary_and_the_resurrected_christ', alt: 'Mary and the resurrected Christ' },
+    mother: { file: 'young_jesus_comforting_his_mother', alt: 'Young Jesus comforting His mother' }
+  };
 
   var state = { dates: [], specials: {}, current: null, requested: '', shownJson: '', loadSeq: 0 };
   var el = function(id) { return document.getElementById(id); };
@@ -279,6 +294,7 @@
       })
       .catch(function() {
         if (seq !== state.loadSeq || cached || silent) return;
+        showImage('');
         el('program').classList.remove('loading');
         el('program').innerHTML =
           '<div class="status">Unable to load the program right now.<br><button id="retry">Try again</button></div>';
@@ -305,8 +321,17 @@
       history.pushState({ date: requested || '' }, '', requested ? '?date=' + state.current : location.pathname);
     }
 
+    showImage(p ? typeOf(p.special).image : '');
     el('program').innerHTML = p ? renderProgram(p, tenseOf(p.date, data.today)) :
       '<div class="status">No program has been posted for this date.</div>';
+  }
+
+  function showImage(name) {
+    var img = IMAGES[name] || IMAGES['default'];
+    el('heroAvif').srcset = img.avif ? img.file + '.avif' : '';
+    if (el('heroImg').getAttribute('src') !== img.file + '.jpg') el('heroImg').src = img.file + '.jpg';
+    el('heroImg').alt = img.alt;
+    el('hero').classList.remove('pending');
   }
 
   // ── Rendering ───────────────────────────────────────────────────────────
