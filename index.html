@@ -109,6 +109,10 @@
       cursor: pointer;
     }
     .muted { color: var(--muted); }
+    .announcements { max-width: 440px; margin: 0 auto; }
+    .announcement { padding: 16px 0 0; }
+    .announcement + .announcement { border-top: 1px solid var(--line); margin-top: 16px; }
+    .announcement a { color: var(--accent); overflow-wrap: anywhere; }
     .notice { max-width: 420px; margin: 0 auto; padding: 28px 0 0; }
     .note { max-width: 420px; margin: 0 auto; padding: 6px 0 0; font-size: 16px; color: var(--muted); }
     .details h3 {
@@ -322,7 +326,9 @@
     }
 
     showImage(p ? typeOf(p.special).image : '');
-    el('program').innerHTML = p ? renderProgram(p, tenseOf(p.date, data.today)) :
+    // Announcements belong to the current program only (today's, or the upcoming Sunday's).
+    el('program').innerHTML = p ? renderProgram(p, tenseOf(p.date, data.today)) +
+      (p.date === data.upcoming ? renderAnnouncements(data.announcements) : '') :
       '<div class="status">No program has been posted for this date.</div>';
   }
 
@@ -401,6 +407,17 @@
     html += required('Closing Hymn', hymnHtml(p.closingHymn), tense);
     html += required('Closing Prayer', esc(p.closingPrayer), tense);
     return html;
+  }
+
+  // One announcement per row of the sheet's Announcements tab. Text only; line breaks kept, links clickable.
+  function renderAnnouncements(list) {
+    if (!list || !list.length) return '';
+    return '<hr><h2>Announcements</h2><div class="announcements">' + list.map(function(a) {
+      var html = esc(a).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, function(url) {
+        return '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
+      });
+      return '<div class="announcement">' + html.replace(/\n/g, '<br>') + '</div>';
+    }).join('') + '</div>';
   }
 
   function renderNoMeeting(type, tense) {
