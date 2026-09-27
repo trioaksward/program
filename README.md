@@ -5,10 +5,12 @@ Public page: https://trioaksward.github.io/program
 ## How it works
 
 - **The data** is the "Tri Oaks Sacrament Hymns" Google Sheet: one tab per year, one row per Sunday.
-  Fill in a Sunday's row and the page shows it within about 2 minutes. There's no publish step.
+  Fill in a Sunday's row and the page shows it within about 2 minutes (the server caches for 1 minute; open pages
+  re-check every minute on Sundays). There's no publish step.
 - **The page** (`index.html`) shows today's program on Sunday, otherwise the upcoming Sunday's.
   Tap the date to pick an earlier program (the last 10 years are offered). Future Sundays are never shown.
-  Pages left open check for changes every 10 minutes and whenever the viewer returns to them.
+  Pages left open check for changes every minute on Sundays (every 10 minutes other days) and whenever the
+  viewer returns to them.
 - **The connection** is a read-only Google Apps Script web app (the "ProgramAdmin" project, owned by the
   ward account). It returns only the program columns and hymn links, never the Members tab.
 
@@ -93,6 +95,6 @@ Add `?date=YYYY-MM-DD`, for example https://trioaksward.github.io/program/?date=
 
 | What changed | How it goes live | How long |
 |---|---|---|
-| A program in the Sheet | Nothing to do. | up to ~2 min |
+| A program in the Sheet | Nothing to do. | up to ~2 min on Sundays |
 | This page (`index.html`, images) | Commit and push to `main`. GitHub Pages rebuilds automatically. | ~1 min; browsers may keep the old page for up to 10 min |
 | The Apps Script code (`Code.js`, `Maintenance.js`) | `clasp push`, `clasp create-version`, then `clasp update-deployment <deploymentId> -V <version>`. The URL stays the same. | immediate |

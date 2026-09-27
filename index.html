@@ -227,7 +227,10 @@
   // Returns { ok, today, upcoming, dates: [{ date, special }], program }.
   var API_URL = 'https://script.google.com/macros/s/AKfycbwbfE5bAvaC2rSJs-HMSCQ8Gc9xCJl7-Pk-W66HXUu0MBwJgPHzSMPxdVXv23gLjpet/exec';
   var CACHE_PREFIX = 'program2:';
-  var REFRESH_MS = 10 * 60 * 1000; // re-check the sheet while the page stays open
+  // While the page stays open, re-check the sheet every minute on Sundays (when the program changes most)
+  // and every 10 minutes on other days. Returning to the tab always re-checks right away.
+  var REFRESH_SUNDAY_MS = 60 * 1000;
+  var REFRESH_WEEKDAY_MS = 10 * 60 * 1000;
 
   // How each "Special Program" value is shown. Keys are lowercase. Values not listed here are
   // shown as a regular meeting with the value as its label.
@@ -281,6 +284,7 @@
   // silent: background re-check of the page being viewed — no spinner, no error message.
   function load(date, push, silent) {
     var seq = ++state.loadSeq;
+    state.lastCheck = Date.now();
     var key = date || 'current';
 
     // Show the last copy we saw right away, then refresh from the sheet.
@@ -580,7 +584,10 @@
     if (document.visibilityState === 'visible' && !el('picker').open) load(state.requested, false, true);
   }
   document.addEventListener('visibilitychange', refresh);
-  setInterval(refresh, REFRESH_MS);
+  setInterval(function() {
+    var every = new Date().getDay() === 0 ? REFRESH_SUNDAY_MS : REFRESH_WEEKDAY_MS;
+    if (Date.now() - (state.lastCheck || 0) >= every - 1000) refresh();
+  }, REFRESH_SUNDAY_MS);
 
   // ── Start ───────────────────────────────────────────────────────────────
 
