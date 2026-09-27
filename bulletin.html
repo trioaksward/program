@@ -117,6 +117,7 @@
         return;
       }
       data = res;
+      if (window.setMeetingTime) setMeetingTime(res.meetingTime);
       route();
     }).catch(function() { view.innerHTML = '<div class="status">Unable to load right now.</div>'; });
   }

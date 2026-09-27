@@ -331,6 +331,7 @@
     var json = JSON.stringify(data);
     if (!push && json === state.shownJson && requested === state.requested) return; // nothing changed
     state.shownJson = json;
+    if (window.setMeetingTime) setMeetingTime(data.meetingTime);
     state.requested = requested || '';
     state.dates = (data.dates || []).map(function(d) { return d.date; });
     state.specials = {};

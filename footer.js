@@ -1,6 +1,10 @@
 // Site footer, shared by every page: <script src="footer.js"></script> right after </main>.
-// Edit the text here once and it changes everywhere. Text is #eef1f1 on #4D7273 (about 4.7:1 contrast, readable).
+// Edit the text here once and it changes everywhere. The meeting time comes from the sheet (Website →
+// Sacrament meeting time…): pages call setMeetingTime() with the server's value, remembered on this device. Text is #eef1f1 on #4D7273 (about 4.7:1 contrast, readable).
 (function() {
+  var TIME_KEY = 'meeting-time', DEFAULT_TIME = '12:00pm';
+  var saved = '';
+  try { saved = localStorage.getItem(TIME_KEY) || ''; } catch (e) {}
   var style = document.createElement('style');
   style.textContent =
     '.site-footer { background: #4D7273; color: #eef1f1; font-family: "Montserrat", sans-serif; font-weight: 300; font-size: 15px; line-height: 1.5; text-align: center; padding: 36px 16px 20px; }' +
@@ -28,7 +32,7 @@
           '<a href="mailto:steed.mike@gmail.com?subject=Tri%20Oaks%20Ward%20Sacrament%20Program%20and%20Ward%20Bulletin">steed.mike@gmail.com</a>.</p>' +
       '</section>' +
       '<section><h2>Sacrament Service</h2>' +
-        '<p>Sundays at 12:00pm</p>' +
+        '<p>Sundays at <span class="meeting-time"></span></p>' +
         '<p><a href="https://maps.app.goo.gl/2y91WC4T4veePMPX6" target="_blank" rel="noopener">2375 E 3225 N<br>Layton, UT 84040</a></p>' +
         '<a class="social" href="https://www.facebook.com/groups/414083041989176" target="_blank" rel="noopener" aria-label="Tri Oaks Ward on Facebook">' +
           '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.101 23.691v-7.98H6.627v-3.667h2.474v-1.58c0-4.085 1.848-5.978 5.858-5.978.401 0 .955.042 1.468.103a8.68 8.68 0 0 1 1.141.195v3.325a8.623 8.623 0 0 0-.653-.036 26.805 26.805 0 0 0-.733-.009c-.707 0-1.259.096-1.675.309a1.686 1.686 0 0 0-.679.622c-.258.42-.374.995-.374 1.752v1.297h3.919l-.386 2.103-.287 1.564h-3.246v8.245C19.396 23.238 24 18.179 24 12.044c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.628 3.874 10.35 9.101 11.647Z"/></svg>' +
@@ -37,4 +41,11 @@
     '</div>' +
     '<div class="copy">© ' + new Date().getFullYear() + ' Tri Oaks Ward - Sacrament Program &amp; Bulletin</div>';
   document.currentScript.parentNode.insertBefore(footer, document.currentScript);
+
+  window.setMeetingTime = function(time) {
+    if (!time) return;
+    footer.querySelectorAll('.meeting-time').forEach(function(el) { el.textContent = time; });
+    try { localStorage.setItem(TIME_KEY, time); } catch (e) {}
+  };
+  footer.querySelector('.meeting-time').textContent = saved || DEFAULT_TIME;
 })();
