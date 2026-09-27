@@ -4,12 +4,63 @@ Public page: https://trioaksward.github.io/program
 
 ## How it works
 
-- **The data** comes from the "Tri Oaks Sacrament Hymns" Google Sheet: one tab per year, one row per Sunday.
+- **The data** is the "Tri Oaks Sacrament Hymns" Google Sheet: one tab per year, one row per Sunday.
   Fill in a Sunday's row and the page shows it within about 2 minutes. There's no publish step.
 - **The page** (`index.html`) shows today's program on Sunday, otherwise the upcoming Sunday's.
   The arrows and the date picker (tap the date) go back to earlier programs. Future Sundays are never shown.
-- **The connection** is a read-only Google Apps Script web app (the "ProgramAdmin" project). It returns only
-  the program columns (A–R) and hymn links, never the Members tab.
+  Pages left open check for changes every 10 minutes and whenever the viewer returns to them.
+- **The connection** is a read-only Google Apps Script web app (the "ProgramAdmin" project, owned by the
+  ward account). It returns only the program columns and hymn links, never the Members tab.
+
+## Filling in a Sunday (the year tabs)
+
+Columns are found by their names, so the names must stay exactly as they are (they're protected).
+
+| Column | Notes |
+|---|---|
+| Date … Closing Hymn | As always. Hymns are picked from the dropdown. |
+| **Program Details** | Optional. When filled in, it replaces the speakers on the page (see below). |
+| **Speaker 1–8** | In speaking order, youth or adult. Everyone is shown as "Speaker". |
+| Intermediate Hymn Position | "After Speaker N" places the intermediate hymn / musical number. |
+| Conducting, Presiding, Opening/Closing Prayer | As always. |
+
+Blank required fields show **TBA** for upcoming Sundays and **—** for past ones.
+Regular Sundays always show at least 2 speakers.
+
+### Special Program
+
+| Value | What the page shows |
+|---|---|
+| General Conference, Stake Conference, Temple Dedication | A short notice that sacrament service isn't held (plus Program Details, if any) |
+| Fast Sunday | "Bearing of Testimonies" instead of speakers |
+| Musical Testimony Meeting | "Hymns of Testimony" instead of speakers |
+| Primary Program, Christmas Program, Easter Program | A heading and short description instead of speakers |
+| Ward Conference, Mother's Day Program, Under Stake Direction, anything else | A normal program with speakers, labeled with the value |
+
+### Program Details (one cell; press Ctrl/Cmd + Enter for a new line)
+
+```
+## Primary Program
+Opening Song: #1005
+Narrator: Sister Jane Doe
+The children will sing between each section.
+```
+
+- `## ` starts a heading.
+- `Label: name` shows a label with the name under it.
+- `#123` links the hymn and fills in its title.
+- Any other line is shown as text. A blank line adds space.
+
+## Automatic upkeep (ProgramAdmin Apps Script project, owned by the ward account)
+
+- **November 1** (retried December 1): next year's tab is created by copying the current year. It gets every
+  Sunday, Presiding pre-filled, the Table renamed, the same protections, and the tab from 2 years back hidden.
+  An email goes to TriOaksWardBulletin@gmail.com. If the dates don't show like "January 4, 2026", the email
+  explains the two-click fix (Format > Number > Custom date and time); scripts can't set that format.
+- **Every Saturday**: a check emails TriOaksWardBulletin@gmail.com if a needed column is missing or
+  tomorrow has no row.
+- **Members / Hymns** "Last Spoke", "Last Prayed", "Last Sung", "Times Sung" read from the hidden **History**
+  tab, which lists every speaker, prayer and hymn for the last 4 years by column name.
 
 ## Sharing a specific week
 
@@ -19,8 +70,6 @@ Add `?date=YYYY-MM-DD`, for example https://trioaksward.github.io/program/?date=
 
 | What changed | How it goes live | How long |
 |---|---|---|
-| A program in the Sheet | Nothing to do. Open pages re-check every 10 minutes and whenever the viewer returns to the tab. | up to ~2 min (server cache) |
-| This page (`index.html`, images) | Commit and push to `main`. GitHub Pages rebuilds automatically. | ~1 min to build; browsers may keep the old page for up to 10 min |
-| The Apps Script endpoint (ProgramAdmin `Code.js`) | `clasp push`, then `clasp create-version`, then `clasp update-deployment <deploymentId> -V <version>`. The URL stays the same. | immediate |
-
-The endpoint rarely needs to change. It only does if the Sheet's columns change (for example, a new column is added).
+| A program in the Sheet | Nothing to do. | up to ~2 min |
+| This page (`index.html`, images) | Commit and push to `main`. GitHub Pages rebuilds automatically. | ~1 min; browsers may keep the old page for up to 10 min |
+| The Apps Script code (`Code.js`, `Maintenance.js`) | `clasp push`, `clasp create-version`, then `clasp update-deployment <deploymentId> -V <version>`. The URL stays the same. | immediate |
