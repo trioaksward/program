@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Ward Bulletin · Tri Oaks Ward</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@1,400&family=Montserrat:wght@300;500&display=swap">
+  <style>
+    :root {
+      --ink: rgb(4, 38, 48);
+      --accent: rgb(76, 114, 115);
+      --muted: rgba(4, 38, 48, 0.55);
+      --line: rgba(76, 114, 115, 0.35);
+      --bg: #fff;
+      --hover: rgba(76, 114, 115, 0.08);
+    }
+    * { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body { margin: 0; background: var(--bg); color: var(--ink); font-family: "Montserrat", sans-serif; font-weight: 300; font-size: 18px; line-height: 1.5; overflow-wrap: break-word; }
+    main { max-width: 640px; margin: 0 auto; padding: 24px 16px 64px; }
+    .eyebrow { font-size: 13px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); font-weight: 500; text-align: center; }
+    .eyebrow a { color: inherit; text-decoration: none; }
+    h1 { font-family: "Lora", serif; font-style: italic; font-weight: 400; color: var(--accent); margin: 0; font-size: 32px; text-align: center; padding: 14px 0 6px; }
+    .sub { text-align: center; color: var(--muted); font-size: 15px; margin: 0 0 18px; }
+    .status { text-align: center; padding: 40px 0; color: var(--muted); }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin: 4px 0 18px; }
+    .chip { padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; background: none; color: var(--accent); font: inherit; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .unlock { max-width: 380px; margin: 0 auto 16px; padding: 14px 16px; border: 1px solid var(--line); border-radius: 14px; text-align: center; font-size: 15px; }
+    .unlock p { margin: 0 0 10px; color: var(--muted); }
+    .unlock form { display: flex; gap: 8px; }
+    .unlock input { flex: 1; min-width: 0; padding: 10px 12px; font: inherit; font-size: 16px; border: 1px solid var(--line); border-radius: 10px; }
+    button.primary { padding: 10px 18px; border: 1px solid var(--accent); border-radius: 999px; background: var(--accent); color: #fff; font: inherit; font-size: 15px; font-weight: 500; cursor: pointer; }
+    .error { color: #8a2020; font-size: 14px; margin-top: 8px; min-height: 1.2em; }
+
+    .year { font-weight: 500; color: var(--accent); padding: 18px 0 6px; border-bottom: 1px solid var(--line); }
+    .item { display: block; width: 100%; padding: 12px 6px; border: 0; border-bottom: 1px solid rgba(76, 114, 115, 0.15); background: none; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+    .item:hover { background: var(--hover); }
+    .item .row { display: flex; justify-content: space-between; gap: 12px; align-items: baseline; }
+    .item .name { font-weight: 500; }
+    .item .when { color: var(--muted); font-size: 14px; white-space: nowrap; }
+    .tags { margin-top: 3px; display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag { font-size: 12px; font-weight: 500; color: var(--accent); border: 1px solid var(--line); border-radius: 999px; padding: 1px 8px; }
+    .tag.feat { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .lock { font-size: 13px; color: var(--muted); }
+
+    .back { display: inline-block; margin: 4px 0 8px; color: var(--accent); text-decoration: none; font-size: 15px; }
+    article .meta { text-align: center; color: var(--muted); font-size: 15px; margin-bottom: 20px; }
+    article .tags { justify-content: center; margin-bottom: 16px; }
+    article p { margin: 0 0 14px; }
+    article h3, article h4 { font-family: "Lora", serif; font-style: italic; font-weight: 400; color: var(--accent); margin: 22px 0 8px; }
+    article h3 { font-size: 23px; } article h4 { font-size: 20px; }
+    article img { display: block; max-width: 100%; height: auto; margin: 18px auto; border-radius: 12px; box-shadow: 0 8px 24px rgba(4, 38, 48, 0.15); }
+    article a { color: var(--accent); }
+    .foot { text-align: center; margin-top: 32px; font-size: 15px; }
+    .foot a { color: var(--accent); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  </style>
+</head>
+<body>
+<main>
+  <div class="eyebrow"><a href="./">Tri Oaks Ward</a> · Ward Bulletin</div>
+  <div id="view"><div class="status">Loading…</div></div>
+</main>
+
+<script>
+  // Ward Bulletin: posts from the program sheet's Bulletin tab plus the Member Spotlights folder, served by the
+  // ward's Apps Script. Featured posts are public; everything else (and all spotlights) needs the ward
+  // password, which is remembered on this device.
+  //   bulletin.html                         all posts
+  //   bulletin.html?category=Relief%20Society  filtered
+  //   bulletin.html#<post id>                one post
+  var API_URL = 'https://script.google.com/macros/s/AKfycbwbfE5bAvaC2rSJs-HMSCQ8Gc9xCJl7-Pk-W66HXUu0MBwJgPHzSMPxdVXv23gLjpet/exec';
+  var PW_KEY = 'spotlight-password';
+  var view = document.getElementById('view');
+  var data = null;                                                   // { unlocked, posts }
+  var filter = new URLSearchParams(location.search).get('category') || 'All';
+  var unlockMessage = '';
+
+  function esc(s) {
+    return String(s).replace(/[&<>"']/g, function(c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]; });
+  }
+  function getPw() { try { return localStorage.getItem(PW_KEY) || ''; } catch (e) { return ''; } }
+  function setPw(p) { try { p ? localStorage.setItem(PW_KEY, p) : localStorage.removeItem(PW_KEY); } catch (e) {} }
+
+  function api(body) {
+    body.password = getPw();
+    // text/plain keeps this a "simple" request, so the browser doesn't need a CORS preflight.
+    return fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify(body) })
+      .then(function(r) { return r.json(); });
+  }
+  function formatDate(iso, withDay) {
+    var p = iso.split('-').map(Number);
+    return new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', withDay ? { month: 'long', day: 'numeric', year: 'numeric' } : { month: 'short', day: 'numeric' });
+  }
+  function tagsHtml(p) {
+    return '<div class="tags">' + (p.featured ? '<span class="tag feat">Featured</span>' : '') +
+      [p.category].concat(p.alsoIn || []).map(function(c) { return '<span class="tag">' + esc(c) + '</span>'; }).join('') +
+      (p.membersOnly && !data.unlocked ? '<span class="lock">🔒 members</span>' : '') + '</div>';
+  }
+
+  function load() {
+    view.innerHTML = '<div class="status">Loading…</div>';
+    api({ action: 'bulletin' }).then(function(res) {
+      if (!res.ok) {
+        if (res.badPassword || res.locked) { setPw(''); unlockMessage = res.error; return load(); }
+        view.innerHTML = '<div class="status">' + esc(res.error || 'Unable to load right now.') + '</div>';
+        return;
+      }
+      data = res;
+      route();
+    }).catch(function() { view.innerHTML = '<div class="status">Unable to load right now.</div>'; });
+  }
+
+  function unlockBox() {
+    if (data.unlocked || !data.passwordSet) return '';
+    return '<div class="unlock"><p>Enter the ward password to see all posts, including Member Spotlights. It’s on the signs by the chapel doors.</p>' +
+      '<form id="pw"><input id="pwInput" type="password" autocomplete="current-password" placeholder="Ward password" aria-label="Ward password">' +
+      '<button class="primary" type="submit">Unlock</button></form><div class="error">' + esc(unlockMessage) + '</div></div>';
+  }
+
+  function showList() {
+    var cats = ['All'];
+    data.posts.forEach(function(p) { [p.category].concat(p.alsoIn || []).forEach(function(c) { if (cats.indexOf(c) < 0) cats.push(c); }); });
+    if (cats.indexOf(filter) < 0 && filter !== 'All') cats.push(filter);
+    var shown = data.posts.filter(function(p) { return filter === 'All' || p.category === filter || (p.alsoIn || []).indexOf(filter) >= 0; });
+
+    var html = '<h1>' + (filter === 'Member Spotlight' ? 'Member Spotlights' : 'Ward Bulletin') + '</h1>' +
+      '<p class="sub">' + (filter === 'Member Spotlight' ? 'Getting to know the members of our ward' : 'News and announcements from around the ward') + '</p>' +
+      unlockBox() + '<div class="chips">' + cats.map(function(c) {
+        return '<button class="chip" data-cat="' + esc(c) + '" aria-pressed="' + (c === filter) + '">' + esc(c === 'Member Spotlight' ? 'Member Spotlights' : c) + '</button>';
+      }).join('') + '</div>';
+    var year = '';
+    shown.forEach(function(p) {
+      var y = p.date.slice(0, 4);
+      if (y !== year) { html += '<div class="year">' + y + '</div>'; year = y; }
+      html += '<button class="item" data-id="' + esc(p.id) + '"><div class="row"><span class="name">' + esc(p.title) + '</span>' +
+        '<span class="when">' + esc(formatDate(p.date)) + '</span></div>' + tagsHtml(p) + '</button>';
+    });
+    if (!shown.length) html += '<div class="status">' + (data.unlocked ? 'Nothing here yet.' : 'Unlock with the ward password to see these posts.') + '</div>';
+    html += '<div class="foot"><a href="./">← Sacrament program</a></div>';
+    view.innerHTML = html;
+
+    view.querySelectorAll('.chip').forEach(function(b) {
+      b.onclick = function() {
+        filter = b.getAttribute('data-cat');
+        history.replaceState(null, '', filter === 'All' ? location.pathname : '?category=' + encodeURIComponent(filter));
+        showList();
+      };
+    });
+    view.querySelectorAll('.item').forEach(function(b) { b.onclick = function() { location.hash = b.getAttribute('data-id'); }; });
+    var form = document.getElementById('pw');
+    if (form) form.onsubmit = function(e) { e.preventDefault(); setPw(document.getElementById('pwInput').value.trim()); unlockMessage = ''; load(); };
+  }
+
+  function showPost(id) {
+    var p = data.posts.filter(function(x) { return x.id === id; })[0];
+    var back = '<a class="back" href="#">← ' + (filter === 'Member Spotlight' ? 'All spotlights' : 'Bulletin') + '</a>';
+    if (!p && !data.unlocked) {                        // e.g. a shared link to a members-only post
+      view.innerHTML = back + '<h1>Members only</h1>' + unlockBox();
+      var f = document.getElementById('pw');
+      if (f) f.onsubmit = function(e) { e.preventDefault(); setPw(document.getElementById('pwInput').value.trim()); load(); };
+      return;
+    }
+    view.innerHTML = back + '<h1>' + esc(p ? p.title : '') + '</h1><div class="status">Loading…</div>';
+    window.scrollTo(0, 0);
+    if (p && !p.hasDoc && p.text !== undefined) return renderPost(p, null);
+    api({ action: 'post', id: id }).then(function(res) {
+      if (location.hash.slice(1) !== id) return;       // the reader moved on
+      if (!res.ok) { view.innerHTML = back + '<div class="status">' + esc(res.error) + '</div>'; return; }
+      renderPost(res.post, res.post.html);
+    }).catch(function() { view.innerHTML = back + '<div class="status">Unable to load right now.</div>'; });
+  }
+
+  function renderPost(p, html) {
+    if (html === null) {
+      html = esc(p.text).split(/\n{2,}/).map(function(par) {
+        return '<p>' + par.replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, function(u) { return '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>'; }).replace(/\n/g, '<br>') + '</p>';
+      }).join('');
+    }
+    var full = data.posts.filter(function(x) { return x.id === p.id; })[0] || p;
+    view.innerHTML = '<a class="back" href="#">← Bulletin</a><article><h1>' + esc(p.title) + '</h1>' +
+      '<div class="meta">' + esc(formatDate(p.date, true)) + '</div>' + tagsHtml(full) + html + '</article>' +
+      '<div class="foot"><a href="#">← Bulletin</a></div>';
+  }
+
+  function route() {
+    if (!data) return;
+    var id = location.hash.slice(1);
+    if (id) showPost(id); else showList();
+  }
+  window.addEventListener('hashchange', route);
+  load();
+</script>
+</body>
+</html>

@@ -109,8 +109,12 @@
       cursor: pointer;
     }
     .muted { color: var(--muted); }
-    .more { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 15px; }
+    .more { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 15px; display: flex; justify-content: center; gap: 28px; flex-wrap: wrap; }
     .more a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .ann-title { font-weight: 500; }
+    .ann-cat { font-size: 13px; font-weight: 500; color: var(--accent); margin: 2px 0 6px; }
+    .ann-more { color: var(--accent); font-weight: 500; text-decoration: none; }
+    .ann-more::after { content: " →"; }
     .more a::after { content: " →"; }
     .announcements { max-width: 440px; margin: 0 auto; }
     .announcement { padding: 16px 0 0; }
@@ -216,7 +220,7 @@
 
   <div id="program" aria-live="polite"><div class="status">Loading program…</div></div>
 
-  <div class="more"><a href="spotlights.html">Member Spotlights</a></div>
+  <div class="more"><a href="bulletin.html">Ward Bulletin</a><a href="bulletin.html?category=Member%20Spotlight">Member Spotlights</a></div>
 </main>
 
 <dialog id="picker" aria-labelledby="pickerTitle">
@@ -337,7 +341,7 @@
     showImage(p ? typeOf(p.special).image : '');
     // Announcements belong to the current program only (today's, or the upcoming Sunday's).
     el('program').innerHTML = p ? renderProgram(p, tenseOf(p.date, data.today)) +
-      (p.date === data.upcoming ? renderAnnouncements(data.announcements) : '') :
+      (p.date === data.upcoming ? renderAnnouncements(data.announcements, data.featured) : '') :
       '<div class="status">No program has been posted for this date.</div>';
   }
 
@@ -418,15 +422,33 @@
     return html;
   }
 
-  // One announcement per row of the sheet's Announcements tab. Text only; line breaks kept, links clickable.
-  function renderAnnouncements(list) {
-    if (!list || !list.length) return '';
-    return '<hr><h2>Announcements</h2><div class="announcements">' + list.map(function(a) {
-      var html = esc(a).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, function(url) {
-        return '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
-      });
-      return '<div class="announcement">' + html.replace(/\n/g, '<br>') + '</div>';
-    }).join('') + '</div>';
+  function linkify(text) {
+    return esc(text).replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, function(url) {
+      return '<a href="' + url + '" target="_blank" rel="noopener">' + url + '</a>';
+    }).replace(/\n/g, '<br>');
+  }
+
+  // Under the current program: featured Bulletin posts, teasers for the newest Member Spotlights, and any
+  // rows still in the older Announcements tab. Text posts show in full; others link to the Ward Bulletin.
+  function renderAnnouncements(list, featured) {
+    var posts = (featured || []).filter(function(f) { return !f.spotlight; });
+    var spotlights = (featured || []).filter(function(f) { return f.spotlight; });
+    var old = list || [];
+    if (!posts.length && !spotlights.length && !old.length) return '';
+    var html = '<hr><h2>Announcements</h2><div class="announcements">';
+    posts.forEach(function(f) {
+      html += '<div class="announcement"><div class="ann-title">' + esc(f.title) + '</div>' +
+        '<div class="ann-cat">' + esc(f.category) + '</div>' +
+        (f.text ? '<div>' + linkify(f.text) + '</div>' : '') +
+        (f.hasDoc ? '<a class="ann-more" href="bulletin.html#' + encodeURIComponent(f.id) + '">Read more</a>' : '') + '</div>';
+    });
+    old.forEach(function(a) { html += '<div class="announcement">' + linkify(a) + '</div>'; });
+    if (spotlights.length) {
+      html += '<div class="announcement"><div class="ann-cat">Member Spotlights</div>' + spotlights.map(function(f) {
+        return '<a class="ann-more" href="bulletin.html?category=Member%20Spotlight#' + encodeURIComponent(f.id) + '">' + esc(f.title) + '</a>';
+      }).join('<br>') + '</div>';
+    }
+    return html + '</div>';
   }
 
   function renderNoMeeting(type, tense) {
