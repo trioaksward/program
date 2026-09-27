@@ -7,7 +7,7 @@ Public page: https://trioaksward.github.io/program
 - **The data** is the "Tri Oaks Sacrament Hymns" Google Sheet: one tab per year, one row per Sunday.
   Fill in a Sunday's row and the page shows it within about 2 minutes. There's no publish step.
 - **The page** (`index.html`) shows today's program on Sunday, otherwise the upcoming Sunday's.
-  The arrows and the date picker (tap the date) go back to earlier programs. Future Sundays are never shown.
+  Tap the date to pick an earlier program (the last 10 years are offered). Future Sundays are never shown.
   Pages left open check for changes every 10 minutes and whenever the viewer returns to them.
 - **The connection** is a read-only Google Apps Script web app (the "ProgramAdmin" project, owned by the
   ward account). It returns only the program columns and hymn links, never the Members tab.
@@ -57,6 +57,7 @@ The children will sing between each section.
   Sunday, Presiding pre-filled, the Table renamed, the same protections, and the tab from 2 years back hidden.
   An email goes to TriOaksWardBulletin@gmail.com. If the dates don't show like "January 4, 2026", the email
   explains the two-click fix (Format > Number > Custom date and time); scripts can't set that format.
+- **January 1**: last year's tab is locked (whole-tab protection, copied from the earlier years' settings).
 - **Every Saturday**: a check emails TriOaksWardBulletin@gmail.com if a needed column is missing or
   tomorrow has no row.
 - **Members / Hymns** "Last Spoke", "Last Prayed", "Last Sung", "Times Sung" read from the hidden **History**
