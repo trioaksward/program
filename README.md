@@ -66,7 +66,7 @@ The children will sing between each section.
 - **Members / Hymns** "Last Spoke", "Last Prayed", "Last Sung", "Times Sung" read from the hidden **History**
   tab, which lists every speaker, prayer and hymn for the last 4 years by column name.
 
-## Members & texting (clerk tools in the Sheet)
+## Members, texting & hymns (clerk tools in the Sheet)
 
 - **Adding a move-in:** open the Sheet on a computer, then **Members → Add member…** (the menu only shows for people
   allowed to edit the Members tab). Enter title, name, optional preferred name, birth date, phone and household
@@ -79,7 +79,11 @@ The children will sing between each section.
   "today" on Sunday, otherwise "this Sunday". Add who you are the first time you text someone.
   The links go through `sms.html` on this site, which only hands the draft to Messages; the number and text
   stay on the phone.
-- **Access:** to let a new clerk use these, add them in **Data → Protected sheets and ranges → Members**.
+- **New hymns:** when the church releases new hymns, use **Hymns → Add new hymn…** (computer; shows for people who can
+  edit the Hymns tab). Enter the number and title; the church link fills in automatically
+  (`…/study/music/hymns-for-home-and-church/<title>?lang=eng`). Tap **Open** to check it, then **Add hymn**. It's added
+  in number order and appears in the hymn dropdowns and on this site.
+- **Access:** to let a new clerk use these, add them in **Data → Protected sheets and ranges → Members** (and **Hymns**).
 
 ## Sharing a specific week
 
