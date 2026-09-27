@@ -1,6 +1,6 @@
 # Tri Oaks Ward Sacrament Program
 
-Public page: https://trioaksward.github.io/program
+Public page: https://trioaksward.github.io/program · Ward Bulletin: https://trioaksward.github.io/program/bulletin.html
 
 ## How it works
 
@@ -12,7 +12,8 @@ Public page: https://trioaksward.github.io/program
   Pages left open check for changes every minute on Sundays (every 10 minutes other days) and whenever the
   viewer returns to them.
 - **The connection** is a read-only Google Apps Script web app (the "ProgramAdmin" project, owned by the
-  ward account). It returns only the program columns and hymn links, never the Members tab.
+  ward account). It returns only the program columns, hymn links, featured Ward Bulletin posts and the meeting
+  time, never the Members tab.
 
 ## Filling in a Sunday (the year tabs)
 
@@ -87,6 +88,40 @@ The children will sing between each section.
   in number order and appears in the hymn dropdowns and on this site.
 - **Access:** to let a new clerk use these, add them in **Data → Protected sheets and ranges → Members** (and **Hymns**).
 
+## Ward Bulletin & Member Spotlights
+
+`bulletin.html` lists every post, newest first, with category chips (`?category=Relief%20Society`) and one post
+per link (`bulletin.html#<post id>`). `spotlights.html` just redirects to the Member Spotlight category.
+
+- **Where posts come from:** the Sheet's **Bulletin** tab (Date · Title · Category · Also in · Text · Doc ·
+  Feature until), plus every Doc in the ward account's **Member Spotlights** Drive folder (no rows needed; name a
+  Doc "YYYY-MM-DD – Title" to set its date). Longer posts and posts with photos are Google Docs in the **Ward
+  Bulletin** folder, linked from the Doc column.
+- **Adding a post:** on a computer, **Bulletin → Add post…** in the Sheet. Write it there (with photos) or pick a
+  Doc already in the Ward Bulletin folder. Short text-only posts are saved in the row; the rest become a Doc.
+- **Who sees what:** a post is public while it's featured (through the end of its **Feature until** day) and
+  shows under the current program. Everything else, and every Member Spotlight, needs the **ward password**
+  (printed on the chapel QR signs; case and spaces don't matter; remembered on each phone). The 2 newest
+  spotlights are always teased under the program. 20 wrong passwords in 15 minutes pause unlocking for everyone.
+- **Scheduling:** a post dated in the future stays hidden until that day.
+- **Formatting (Text column or the form's buttons):** `[link text](https://…)`, `**bold**`, `*italic*`,
+  lines starting with `- ` for a list, and bare web addresses become links. In a Doc, just use Docs formatting.
+- **Members-only details:** wrap anything private in `{{double braces}}` (e.g. walkabout addresses), in the
+  Text column or inside a Doc. Without the password it shows as "🔒 members only"; the server removes it before
+  anything leaves Google, so it's never in the public page.
+- **Under the program:** a featured text post shows in full; a featured Doc shows its first photo, then its
+  text if short (a flyer photo alone works), with "Read more" only when there's more to see. Doc changes can
+  take ~5 minutes to show there (cached); the bulletin page updates right away.
+- **The ward password** is the `SPOTLIGHT_PASSWORD` Script Property of the ProgramAdmin project (Project Settings →
+  Script Properties; ward account only). Change it there, then reprint the sign labels. It's never in this repo.
+
+## Footer & meeting time
+
+`footer.js` draws the footer (About · Contact · Sacrament Service, Facebook group, © current year) on every
+page; edit its text there. The meeting time ("Sundays at 12:00pm") comes from the Sheet: **Website →
+Sacrament meeting time…** sets it right away or schedules it to start on a date (e.g. next year's time on
+Jan 1). It's saved invisibly on the spreadsheet (developer metadata) and shows within ~5 minutes.
+
 ## Sharing a specific week
 
 Add `?date=YYYY-MM-DD`, for example https://trioaksward.github.io/program/?date=2026-02-08
@@ -96,5 +131,7 @@ Add `?date=YYYY-MM-DD`, for example https://trioaksward.github.io/program/?date=
 | What changed | How it goes live | How long |
 |---|---|---|
 | A program in the Sheet | Nothing to do. | up to ~2 min on Sundays |
-| This page (`index.html`, images) | Commit and push to `main`. GitHub Pages rebuilds automatically. | ~1 min; browsers may keep the old page for up to 10 min |
-| The Apps Script code (`Code.js`, `Maintenance.js`) | `clasp push`, `clasp create-version`, then `clasp update-deployment <deploymentId> -V <version>`. The URL stays the same. | immediate |
+| A bulletin post or the meeting time | Nothing to do. | ~1–5 min |
+| These pages (`index.html`, `bulletin.html`, `footer.js`, images) | Commit and push to `main`. GitHub Pages rebuilds automatically. | ~1 min; browsers may keep the old page for up to 10 min |
+| The website script (ProgramAdmin: `Code.js`, `Bulletin.js`, `Maintenance.js`) | `clasp push`, `clasp create-version`, then `clasp update-deployment <deploymentId> -V <version>`. The URL stays the same. | ~1 min |
+| The Sheet's menus (the script attached to the Sheet: Members, Hymns, Bulletin, Website) | `clasp push` from that project; reload the Sheet. | immediate |
