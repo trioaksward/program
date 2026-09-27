@@ -114,6 +114,9 @@
     .ann-title { font-weight: 500; }
     .ann-cat { font-size: 13px; font-weight: 500; color: var(--accent); margin: 2px 0 6px; }
     .ann-title + .ann-body { margin-top: 6px; }
+    .ann-photo { display: block; margin: 10px auto; }
+    .ann-photo img { display: block; width: 100%; min-height: 200px; border-radius: 12px; background: var(--hover); box-shadow: 0 8px 24px rgba(4, 38, 48, 0.15); opacity: 0; transition: opacity 0.25s; }
+    .ann-photo img.shown { min-height: 0; height: auto; opacity: 1; }
     .ann-body p { margin: 0 0 10px; }
     .ann-body ul { display: inline-block; text-align: left; margin: 0 0 10px; padding-left: 22px; }
     .locked { font-size: 15px; color: var(--muted) !important; white-space: nowrap; text-decoration: none; }
@@ -224,7 +227,7 @@
 
   <div id="program" aria-live="polite"><div class="status">Loading program…</div></div>
 
-  <div class="more"><a href="bulletin.html">Ward Bulletin</a><a href="bulletin.html?category=Member%20Spotlight">Member Spotlights</a></div>
+  <div class="more"><a href="bulletin.html">Ward Bulletin</a><a href="bulletin.html?category=Member%20Spotlight">Member Spotlights</a><a href="https://local.churchofjesuschrist.org/en/units/us/ut/tri-oaks-ward" target="_blank" rel="noopener">Ward Events</a></div>
 </main>
 <script src="footer.js"></script>
 
@@ -348,6 +351,7 @@
     el('program').innerHTML = p ? renderProgram(p, tenseOf(p.date, data.today)) +
       (p.date === data.upcoming ? renderAnnouncements(data.featured) : '') :
       '<div class="status">No program has been posted for this date.</div>';
+    loadPhotos();
   }
 
   function showImage(name) {
@@ -436,9 +440,12 @@
     if (!posts.length && !spotlights.length) return '';
     var html = '<hr><h2>Announcements</h2><div class="announcements">';
     posts.forEach(function(f) {
+      var href = 'bulletin.html#' + encodeURIComponent(f.id);
       html += '<div class="announcement"><div class="ann-title">' + esc(f.title) + '</div>' +
+        (f.photo ? '<a class="ann-photo" href="' + href + '"><img data-photo="' + esc(f.id) + '" alt="' + esc(f.photoAlt || f.title) + '"' +
+          (photoCache[f.id] ? ' src="' + photoCache[f.id] + '" class="shown"' : '') + '></a>' : '') +
         (f.html ? '<div class="ann-body">' + f.html + '</div>' : '') +
-        (f.hasDoc ? '<a class="ann-more" href="bulletin.html#' + encodeURIComponent(f.id) + '">Read more</a>' : '') + '</div>';
+        (f.hasDoc && (f.more || (!f.html && !f.photo)) ? '<a class="ann-more" href="' + href + '">Read more</a>' : '') + '</div>';
     });
     if (spotlights.length) {
       html += '<div class="announcement"><div class="ann-cat">Member Spotlights</div>' + spotlights.map(function(f) {
@@ -446,6 +453,22 @@
       }).join('<br>') + '</div>';
     }
     return html + '</div>';
+  }
+
+  // Photos for featured Doc posts load after the program (they're too big to ride along with it).
+  var photoCache = {};
+  function loadPhotos() {
+    document.querySelectorAll('img[data-photo]:not([src])').forEach(function(img) {
+      var id = img.getAttribute('data-photo');
+      fetch(API_URL, { method: 'POST', headers: { 'Content-Type': 'text/plain;charset=utf-8' }, body: JSON.stringify({ action: 'photo', id: id }) })
+        .then(function(r) { return r.json(); })
+        .then(function(res) {
+          if (!res.ok) { img.parentNode.remove(); return; }
+          photoCache[id] = res.dataUrl;
+          document.querySelectorAll('img[data-photo="' + id + '"]').forEach(function(i) { i.src = res.dataUrl; i.classList.add('shown'); });
+        })
+        .catch(function() { img.parentNode.remove(); });
+    });
   }
 
   function renderNoMeeting(type, tense) {

@@ -20,6 +20,7 @@
       '<section><h2>About</h2>' +
         '<p>The Tri Oaks Ward is a christian congregation in Layton, UT. We are members of The Church of Jesus Christ of Latter-day Saints.</p>' +
         '<p>This website provides Tri Oaks Ward members and visitors access to the program for our weekly worship service, as well as a ward bulletin containing news and announcements for the ward.</p>' +
+        '<p>Upcoming ward activities are also posted on the <a href="https://local.churchofjesuschrist.org/en/units/us/ut/tri-oaks-ward" target="_blank" rel="noopener">Tri Oaks Ward events page</a> on the Church\u2019s website, where you can subscribe to get them by email.</p>' +
       '</section>' +
       '<section><h2>Contact</h2>' +
         '<p><b>This website is <u>NOT</u> an official website of The Church of Jesus Christ of Latter-day Saints.</b></p>' +
