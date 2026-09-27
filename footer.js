@@ -1,16 +1,16 @@
 // Site footer, shared by every page: <script src="footer.js"></script> right after </main>.
-// Edit the text here once and it changes everywhere.
+// Edit the text here once and it changes everywhere. Text is #eef1f1 on #4D7273 (about 4.7:1 contrast, readable).
 (function() {
   var style = document.createElement('style');
   style.textContent =
-    '.site-footer { background: #4D7273; color: #a0a09f; font-family: "Montserrat", sans-serif; font-weight: 300; font-size: 15px; line-height: 1.5; text-align: center; padding: 36px 16px 20px; }' +
+    '.site-footer { background: #4D7273; color: #eef1f1; font-family: "Montserrat", sans-serif; font-weight: 300; font-size: 15px; line-height: 1.5; text-align: center; padding: 36px 16px 20px; }' +
     '.site-footer .cols { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 28px 40px; }' +
-    '.site-footer h2 { font-family: "Montserrat", sans-serif; font-style: normal; font-weight: 400; font-size: 18px; letter-spacing: 0.2em; text-transform: uppercase; color: #a0a09f; margin: 0 0 12px; padding: 0; }' +
+    '.site-footer h2 { font-family: "Montserrat", sans-serif; font-style: normal; font-weight: 400; font-size: 18px; letter-spacing: 0.2em; text-transform: uppercase; color: #fff; margin: 0 0 12px; padding: 0; }' +
     '.site-footer p { margin: 0 0 12px; }' +
     '.site-footer a { color: inherit; text-decoration: underline; text-underline-offset: 3px; }' +
     '.site-footer .social { display: inline-block; margin-top: 4px; color: #fff; line-height: 0; }' +
     '.site-footer .social svg { width: 24px; height: 24px; fill: currentColor; }' +
-    '.site-footer .copy { max-width: 960px; margin: 28px auto 0; padding-top: 14px; border-top: 1px solid rgba(160, 160, 159, 0.35); font-size: 14px; }';
+    '.site-footer .copy { max-width: 960px; margin: 28px auto 0; padding-top: 14px; border-top: 1px solid rgba(238, 241, 241, 0.3); font-size: 14px; }';
   document.head.appendChild(style);
 
   var footer = document.createElement('footer');
