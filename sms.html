@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex">
+  <title>Open Messages</title>
+  <style>
+    :root { --ink: rgb(4, 38, 48); --accent: rgb(76, 114, 115); --muted: rgba(4, 38, 48, 0.55); --bg: #fff; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      text-align: center;
+    }
+    main { padding: 24px 16px; max-width: 420px; }
+    a.button {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 14px 28px;
+      border-radius: 999px;
+      background: var(--accent);
+      color: #fff;
+      font-size: 18px;
+      font-weight: 600;
+      text-decoration: none;
+    }
+    .draft { margin-top: 20px; color: var(--muted); font-size: 15px; white-space: pre-wrap; }
+  </style>
+</head>
+<body>
+<main>
+  <div id="status">Opening Messages…</div>
+  <a class="button" id="open" href="#">Open Messages</a>
+  <div class="draft" id="draft"></div>
+</main>
+<script>
+  // Hands a text-message draft to the phone's Messages app. Used by the "Text" links in the program
+  // sheet (Google Sheets links can't open Messages directly). The number and message come after "#",
+  // which browsers never send to a server:  sms.html#to=8015551234&body=Hi%2C%20Sister%20Taylor
+  var params = new URLSearchParams(location.hash.slice(1));
+  var digits = (params.get('to') || '').replace(/\D/g, '');
+  if (digits.length === 10) digits = '1' + digits;
+  var body = params.get('body') || '';
+
+  if (!digits) {
+    document.getElementById('status').textContent = 'This link is missing a phone number.';
+    document.getElementById('open').style.display = 'none';
+  } else {
+    // "?&body=" works on both iPhone and Android.
+    var url = 'sms:+' + digits + (body ? '?&body=' + encodeURIComponent(body) : '');
+    document.getElementById('open').href = url;
+    document.getElementById('draft').textContent = body;
+    location.href = url;
+    setTimeout(function() {
+      document.getElementById('status').textContent = 'If Messages didn’t open, tap the button:';
+    }, 1500);
+  }
+</script>
+</body>
+</html>
