@@ -109,6 +109,9 @@
       cursor: pointer;
     }
     .muted { color: var(--muted); }
+    .more { margin-top: 44px; padding-top: 18px; border-top: 1px solid var(--line); font-size: 15px; }
+    .more a { color: var(--accent); text-decoration: none; font-weight: 500; }
+    .more a::after { content: " →"; }
     .announcements { max-width: 440px; margin: 0 auto; }
     .announcement { padding: 16px 0 0; }
     .announcement + .announcement { border-top: 1px solid var(--line); margin-top: 16px; }
@@ -212,6 +215,8 @@
   </div>
 
   <div id="program" aria-live="polite"><div class="status">Loading program…</div></div>
+
+  <div class="more"><a href="spotlights.html">Member Spotlights</a></div>
 </main>
 
 <dialog id="picker" aria-labelledby="pickerTitle">
