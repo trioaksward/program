@@ -66,6 +66,21 @@ The children will sing between each section.
 - **Members / Hymns** "Last Spoke", "Last Prayed", "Last Sung", "Times Sung" read from the hidden **History**
   tab, which lists every speaker, prayer and hymn for the last 4 years by column name.
 
+## Members & texting (clerk tools in the Sheet)
+
+- **Adding a move-in:** open the Sheet on a computer, then **Members → Add member…** (the menu only shows for people
+  allowed to edit the Members tab). Enter title, name, optional preferred name, birth date, phone and household
+  ("Lastname, Head & Spouse"). It's inserted alphabetically, with Tri Oaks and Active checked and the formulas
+  filled in. Uncheck **Active** later for members who don't usually attend. The Sheets phone app has no custom menus.
+- **Asking someone to pray:** in the **Prayers Report** (people who prayed longest ago are listed first; "never" means
+  no prayer on record), tap **Opening** or **Closing**, then open the link. Messages opens with a draft:
+  adults by title ("Hi, Sister Taylor :)"), ages 13–17 with their own phone by first name, and children under 13
+  (or anyone without a phone) through a parent ("Would Macie be willing…"). It says "tomorrow" on Saturday,
+  "today" on Sunday, otherwise "this Sunday". Add who you are the first time you text someone.
+  The links go through `sms.html` on this site, which only hands the draft to Messages; the number and text
+  stay on the phone.
+- **Access:** to let a new clerk use these, add them in **Data → Protected sheets and ranges → Members**.
+
 ## Sharing a specific week
 
 Add `?date=YYYY-MM-DD`, for example https://trioaksward.github.io/program/?date=2026-02-08
