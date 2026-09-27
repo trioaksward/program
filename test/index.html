@@ -388,7 +388,8 @@
   // number placed per the "Intermediate Hymn Position" column (e.g. "After Speaker 1").
   function renderTalks(p, minSpeakers, tense) {
     var talks = [];
-    if (p.youthSpeaker) talks.push({ label: 'Youth Speaker', name: esc(p.youthSpeaker), key: 'youth speaker' });
+    // Youth speakers (a separate column in unconverted year tabs) are listed simply as "Speaker".
+    if (p.youthSpeaker) talks.push({ label: 'Speaker', name: esc(p.youthSpeaker), key: 'youth speaker' });
     var speakers = (p.speakers || []).slice();
     while (speakers.length < minSpeakers) speakers.push('');
     speakers.forEach(function(name, i) {
