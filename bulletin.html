@@ -57,6 +57,9 @@
     article h3 { font-size: 23px; } article h4 { font-size: 20px; }
     article img { display: block; max-width: 100%; height: auto; margin: 18px auto; border-radius: 12px; box-shadow: 0 8px 24px rgba(4, 38, 48, 0.15); }
     article a { color: var(--accent); }
+    article ul { margin: 0 0 14px; padding-left: 24px; }
+    .locked { font-size: 15px; color: var(--muted) !important; white-space: nowrap; text-decoration: none; }
+    article + .unlock { margin-top: 24px; }
     .foot { text-align: center; margin-top: 32px; font-size: 15px; }
     .foot a { color: var(--accent); }
     :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
@@ -67,6 +70,7 @@
   <div class="eyebrow"><a href="./">Tri Oaks Ward</a> · Ward Bulletin</div>
   <div id="view"><div class="status">Loading…</div></div>
 </main>
+<script src="footer.js"></script>
 
 <script>
   // Ward Bulletin: posts from the program sheet's Bulletin tab plus the Member Spotlights folder, served by the
@@ -117,9 +121,9 @@
     }).catch(function() { view.innerHTML = '<div class="status">Unable to load right now.</div>'; });
   }
 
-  function unlockBox() {
+  function unlockBox(why) {
     if (data.unlocked || !data.passwordSet) return '';
-    return '<div class="unlock"><p>Enter the ward password to see all posts, including Member Spotlights. It’s on the signs by the chapel doors.</p>' +
+    return '<div class="unlock"><p>' + (why || 'Enter the ward password to see all posts, including Member Spotlights.') + ' It’s on the signs by the chapel doors.</p>' +
       '<form id="pw"><input id="pwInput" type="password" autocomplete="current-password" placeholder="Ward password" aria-label="Ward password">' +
       '<button class="primary" type="submit">Unlock</button></form><div class="error">' + esc(unlockMessage) + '</div></div>';
   }
@@ -169,7 +173,7 @@
     }
     view.innerHTML = back + '<h1>' + esc(p ? p.title : '') + '</h1><div class="status">Loading…</div>';
     window.scrollTo(0, 0);
-    if (p && !p.hasDoc && p.text !== undefined) return renderPost(p, null);
+    if (p && !p.hasDoc && p.html !== undefined) return renderPost(p, p.html);
     api({ action: 'post', id: id }).then(function(res) {
       if (location.hash.slice(1) !== id) return;       // the reader moved on
       if (!res.ok) { view.innerHTML = back + '<div class="status">' + esc(res.error) + '</div>'; return; }
@@ -177,16 +181,16 @@
     }).catch(function() { view.innerHTML = back + '<div class="status">Unable to load right now.</div>'; });
   }
 
+  // html comes from the server, with any {{members-only}} parts already locked unless the password was given.
   function renderPost(p, html) {
-    if (html === null) {
-      html = esc(p.text).split(/\n{2,}/).map(function(par) {
-        return '<p>' + par.replace(/https?:\/\/[^\s<]+[^\s<.,;:!?)]/g, function(u) { return '<a href="' + u + '" target="_blank" rel="noopener">' + u + '</a>'; }).replace(/\n/g, '<br>') + '</p>';
-      }).join('');
-    }
     var full = data.posts.filter(function(x) { return x.id === p.id; })[0] || p;
+    var locked = (p.hasPrivate || full.hasPrivate) && !data.unlocked;
     view.innerHTML = '<a class="back" href="#">← Bulletin</a><article><h1>' + esc(p.title) + '</h1>' +
       '<div class="meta">' + esc(formatDate(p.date, true)) + '</div>' + tagsHtml(full) + html + '</article>' +
+      (locked ? unlockBox('Enter the ward password to see the members-only details.') : '') +
       '<div class="foot"><a href="#">← Bulletin</a></div>';
+    var form = document.getElementById('pw');
+    if (form) form.onsubmit = function(e) { e.preventDefault(); setPw(document.getElementById('pwInput').value.trim()); unlockMessage = ''; load(); };
   }
 
   function route() {
