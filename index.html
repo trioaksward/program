@@ -120,12 +120,28 @@
       font-size: 16px;
       cursor: pointer;
     }
+    .muted { color: var(--muted); }
+    .notice { max-width: 420px; margin: 0 auto; padding: 28px 0 0; }
+    .note { max-width: 420px; margin: 0 auto; padding: 6px 0 0; font-size: 16px; color: var(--muted); }
+    .details h3 {
+      font-family: "Lora", serif;
+      font-style: italic;
+      font-weight: 400;
+      font-size: 21px;
+      color: var(--accent);
+      margin: 0;
+      padding: 28px 0 0;
+    }
+    .details .line { padding: 12px 0 0; }
+    .details .gap { height: 12px; }
+
     #program { transition: opacity 0.15s; }
     #program.loading { opacity: 0.35; }
 
     dialog {
       width: min(420px, calc(100vw - 32px));
       max-height: min(560px, calc(100vh - 64px));
+      overflow: hidden;
       padding: 0;
       border: 0;
       border-radius: 16px;
@@ -134,9 +150,9 @@
       box-shadow: 0 20px 60px rgba(4, 38, 48, 0.25);
     }
     dialog::backdrop { background: rgba(4, 38, 48, 0.35); }
+    dialog[open] { display: flex; flex-direction: column; }
     .dlg-head {
-      position: sticky;
-      top: 0;
+      flex: none;
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -147,8 +163,17 @@
     .dlg-head h2 { padding: 0; font-size: 22px; }
     .dlg-close { width: 40px; height: 40px; border: 0; border-radius: 10px; background: none; color: var(--accent); font-size: 26px; cursor: pointer; }
     .dlg-close:hover { background: var(--hover); }
-    .dlg-body { padding: 4px 20px 20px; }
-    .year { padding: 16px 0 8px; font-weight: 500; color: var(--accent); text-align: left; }
+    .dlg-body { overflow-y: auto; padding: 0 20px 20px; }
+    .year {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding: 12px 0 8px;
+      background: var(--bg);
+      font-weight: 500;
+      color: var(--accent);
+      text-align: left;
+    }
     .dates { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 6px; }
     .dates button {
       padding: 8px 4px;
@@ -162,6 +187,8 @@
     }
     .dates button:hover { background: var(--hover); }
     .dates button[aria-current="date"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 500; }
+    .dates .tag { display: block; margin-top: 2px; font-size: 11px; font-weight: 500; color: var(--accent); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .dates button[aria-current="date"] .tag { color: rgba(255, 255, 255, 0.85); }
   </style>
 </head>
 <body>
@@ -188,19 +215,46 @@
 
 <dialog id="picker" aria-labelledby="pickerTitle">
   <div class="dlg-head">
-    <h2 id="pickerTitle">Past Programs</h2>
+    <h2 id="pickerTitle">Programs</h2>
     <button class="dlg-close" id="pickerClose" aria-label="Close">&times;</button>
   </div>
   <div class="dlg-body" id="pickerBody"></div>
 </dialog>
 
 <script>
-  // Read-only Apps Script endpoint (ProgramAdmin project). Returns { ok, upcoming, dates, program }.
+  // Read-only Apps Script endpoint (ProgramAdmin project).
+  // Returns { ok, today, upcoming, dates: [{ date, special }], program }.
   var API_URL = 'https://script.google.com/macros/s/AKfycbwbfE5bAvaC2rSJs-HMSCQ8Gc9xCJl7-Pk-W66HXUu0MBwJgPHzSMPxdVXv23gLjpet/exec';
-  var CACHE_PREFIX = 'program:';
+  var CACHE_PREFIX = 'program2:';
   var REFRESH_MS = 10 * 60 * 1000; // re-check the sheet while the page stays open
 
-  var state = { dates: [], current: null, requested: '', shownJson: '', loadSeq: 0 };
+  // How each "Special Program" value is shown. Keys are lowercase. Values not listed here are
+  // shown as a regular meeting with the value as its label.
+  //   none    — no ward sacrament meeting that Sunday; show a short notice instead of a program
+  //   alt     — ward meeting where `heading` (+ `text`) replaces the speakers
+  //   regular — ward meeting with speakers (at least 2)
+  var TYPES = {
+    'general conference': { kind: 'none', tag: 'Gen Conf', invite: 'watch General Conference' },
+    'stake conference': { kind: 'none', tag: 'Stake Conf', invite: 'attend Stake Conference' },
+    'temple dedication': { kind: 'none', tag: 'Temple', reason: 'in observance of the temple dedication' },
+    'fast sunday': { kind: 'alt', tag: 'Fast', heading: 'Bearing of Testimonies' },
+    'musical testimony meeting': { kind: 'alt', tag: 'Musical', heading: 'Hymns of Testimony',
+      text: 'Members share a brief testimony and a favorite hymn, which the congregation then sings together.' },
+    'primary program': { kind: 'alt', tag: 'Primary', heading: 'Primary Program',
+      text: 'Presented by the children of the Tri Oaks Ward Primary' },
+    'christmas program': { kind: 'alt', tag: 'Christmas', heading: 'Christmas Program',
+      text: 'A program of music and the spoken word celebrating the birth of Jesus Christ' },
+    'easter program': { kind: 'alt', tag: 'Easter', heading: 'Easter Program',
+      text: 'A program of music and the spoken word celebrating the Resurrection of Jesus Christ' },
+    'ward conference': { kind: 'regular', tag: 'Ward Conf' },
+    "mother's day program": { kind: 'regular', tag: "Mother's Day" },
+    'under stake direction': { kind: 'regular', tag: 'Stake' },
+    'under the direction of the stake': { kind: 'regular', tag: 'Stake' },
+    'no special program': { kind: 'regular' }
+  };
+  var MIN_SPEAKERS = 2;
+
+  var state = { dates: [], specials: {}, current: null, requested: '', shownJson: '', loadSeq: 0 };
   var el = function(id) { return document.getElementById(id); };
 
   // ── Data ────────────────────────────────────────────────────────────────
@@ -244,7 +298,9 @@
     if (!push && json === state.shownJson && requested === state.requested) return; // nothing changed
     state.shownJson = json;
     state.requested = requested || '';
-    state.dates = data.dates || [];
+    state.dates = (data.dates || []).map(function(d) { return d.date; });
+    state.specials = {};
+    (data.dates || []).forEach(function(d) { state.specials[d.date] = d.special; });
     var p = data.program;
     state.current = p ? p.date : (requested || data.upcoming);
 
@@ -254,11 +310,10 @@
     updateArrows();
 
     if (push) {
-      var isDefault = !requested;
-      history.pushState({ date: requested || '' }, '', isDefault ? location.pathname : '?date=' + state.current);
+      history.pushState({ date: requested || '' }, '', requested ? '?date=' + state.current : location.pathname);
     }
 
-    el('program').innerHTML = p ? renderProgram(p) :
+    el('program').innerHTML = p ? renderProgram(p, tenseOf(p.date, data.today)) :
       '<div class="status">No program has been posted for this date.</div>';
   }
 
@@ -270,9 +325,23 @@
     });
   }
 
+  function typeOf(special) {
+    var key = String(special || '').toLowerCase().replace(/[’‘]/g, "'").replace(/\s+/g, ' ').trim();
+    return TYPES[key] || (key ? { kind: 'regular', tag: special } : { kind: 'regular' });
+  }
+
+  function tenseOf(date, today) {
+    return date < today ? 'past' : date === today ? 'today' : 'upcoming';
+  }
+
   function item(label, value) {
     if (!value) return '';
     return '<div class="label">' + esc(label) + '</div><div class="value">' + value + '</div>';
+  }
+
+  // Always-shown item: TBA for today/upcoming, "—" for past Sundays when blank.
+  function required(label, value, tense) {
+    return item(label, value || '<span class="muted">' + (tense === 'past' ? '—' : 'TBA') + '</span>');
   }
 
   function hymnHtml(h) {
@@ -281,47 +350,65 @@
     return h.url ? '<a href="' + esc(h.url) + '" target="_blank" rel="noopener">' + esc(text) + '</a>' : esc(text);
   }
 
-  function renderProgram(p) {
-    var html = '';
-    if (p.special) html += '<div class="special">' + esc(p.special) + '</div>';
+  function renderProgram(p, tense) {
+    var type = typeOf(p.special);
+    var html = p.special ? '<div class="special">' + esc(p.special) + '</div>' : '';
 
-    html += item('Presiding', esc(p.presiding));
-    html += item('Conducting', esc(p.conducting));
-    html += item('Chorister', esc(p.chorister));
-    html += item('Organist', esc(p.organist));
+    if (type.kind === 'none') return html + renderNoMeeting(type, tense) + renderDetails(p);
+
+    html += required('Presiding', esc(p.presiding), tense);
+    html += required('Conducting', esc(p.conducting), tense);
+    html += required('Chorister', esc(p.chorister), tense);
+    html += required('Organist', esc(p.organist), tense);
 
     html += '<h2>Welcome &amp; Announcements</h2>';
-    html += item('Opening Hymn', hymnHtml(p.openingHymn));
-    html += item('Opening Prayer', esc(p.openingPrayer));
+    html += required('Opening Hymn', hymnHtml(p.openingHymn), tense);
+    html += required('Opening Prayer', esc(p.openingPrayer), tense);
 
     html += '<h2>Ward &amp; Stake Business</h2>';
-    html += item('Sacrament Hymn', hymnHtml(p.sacramentHymn));
+    html += required('Sacrament Hymn', hymnHtml(p.sacramentHymn), tense);
 
     html += '<hr><h2>Administration of the Sacrament</h2><hr>';
-    html += renderMeetingBody(p);
 
-    html += item('Closing Hymn', hymnHtml(p.closingHymn));
-    html += item('Closing Prayer', esc(p.closingPrayer));
+    // Program Details, when filled in, replaces the speakers for any kind of Sunday.
+    if (p.details) {
+      html += renderDetails(p);
+    } else if (type.kind === 'alt') {
+      html += '<h2>' + esc(type.heading) + '</h2>';
+      if (type.text) html += '<div class="note">' + esc(type.text) + '</div>';
+      html += renderTalks(p, 0, tense);
+    } else {
+      html += renderTalks(p, MIN_SPEAKERS, tense);
+    }
+
+    html += required('Closing Hymn', hymnHtml(p.closingHymn), tense);
+    html += required('Closing Prayer', esc(p.closingPrayer), tense);
     return html;
   }
 
-  // Talks in order, with the intermediate hymn / musical number placed per the sheet's
-  // "Intermediate Hymn Position" column (e.g. "After Speaker 1", "After Youth Speaker").
-  function renderMeetingBody(p) {
+  function renderNoMeeting(type, tense) {
+    var verb = { past: 'was not held', today: 'is not held today', upcoming: 'will not be held' }[tense];
+    var text = 'Sacrament service ' + verb + (type.reason ? ' ' + type.reason : '') + '.';
+    if (type.invite) text += ' All ' + (tense === 'past' ? 'were' : 'are') + ' invited to ' + type.invite + '.';
+    return '<div class="notice">' + esc(text) + '</div>';
+  }
+
+  // Talks in order (padded with TBA/— up to minSpeakers), with the intermediate hymn / musical
+  // number placed per the "Intermediate Hymn Position" column (e.g. "After Speaker 1").
+  function renderTalks(p, minSpeakers, tense) {
     var talks = [];
-    if (p.youthSpeaker) talks.push({ label: 'Youth Speaker', name: p.youthSpeaker, key: 'youth speaker' });
-    (p.speakers || []).forEach(function(name, i) {
-      talks.push({ label: 'Speaker', name: name, key: 'speaker ' + (i + 1) });
+    // Youth speakers (a separate column in unconverted year tabs) are listed simply as "Speaker".
+    if (p.youthSpeaker) talks.push({ label: 'Speaker', name: esc(p.youthSpeaker), key: 'youth speaker' });
+    var speakers = (p.speakers || []).slice();
+    while (speakers.length < minSpeakers) speakers.push('');
+    speakers.forEach(function(name, i) {
+      talks.push({ label: 'Speaker', name: esc(name), key: 'speaker ' + (i + 1) });
     });
 
     var mid = p.intermediate
       ? item(p.intermediate.number ? 'Intermediate Hymn' : 'Musical Number', hymnHtml(p.intermediate))
       : '';
-
-    if (!talks.length) {
-      var testimony = /fast/i.test(p.special || '');
-      return (testimony ? '<div class="label">Bearing of Testimonies</div>' : '') + mid;
-    }
+    if (!talks.length) return mid;
 
     var pos = String(p.intermediatePosition || '').toLowerCase().replace(/^after\s+/, '').trim();
     var at = -1;
@@ -335,10 +422,46 @@
 
     var html = '';
     talks.forEach(function(t, i) {
-      html += item(t.label, esc(t.name));
+      html += required(t.label, t.name, tense);
       if (i === at) html += mid;
     });
     return html;
+  }
+
+  // Program Details: one cell, one item per line.
+  //   "## Heading"       → section heading
+  //   "Label: value"     → label + value, like the rest of the program
+  //   "#123" at the start of a value or line → linked hymn with its title
+  //   any other line     → a line of text; blank lines add space
+  function renderDetails(p) {
+    if (!p.details) return '';
+    var hymns = p.detailHymns || {};
+    var withHymn = function(text) {
+      var m = text.match(/^#(\d+)\b\s*(.*)$/);
+      var h = m && hymns[m[1]];
+      if (!h) return esc(text);
+      var label = '#' + m[1] + ' – ' + h.title;
+      var link = h.url ? '<a href="' + esc(h.url) + '" target="_blank" rel="noopener">' + esc(label) + '</a>' : esc(label);
+      return link + (m[2] ? ' ' + esc(m[2]) : '');
+    };
+
+    var html = '';
+    var lastBlank = true;
+    p.details.split(/\r?\n/).forEach(function(raw) {
+      var line = raw.trim();
+      if (!line) {
+        if (!lastBlank) html += '<div class="gap"></div>';
+        lastBlank = true;
+        return;
+      }
+      lastBlank = false;
+      var heading = line.match(/^##\s*(.+)$/);
+      var colon = line.indexOf(': ');
+      if (heading) html += '<h3>' + esc(heading[1]) + '</h3>';
+      else if (colon > 0 && colon <= 40) html += item(line.slice(0, colon), withHymn(line.slice(colon + 2).trim()));
+      else html += '<div class="line">' + withHymn(line) + '</div>';
+    });
+    return '<div class="details">' + html + '</div>';
   }
 
   function formatDate(iso) {
@@ -355,10 +478,14 @@
     el('next').disabled = i < 0 || i >= state.dates.length - 1;
   }
 
+  // The newest date is loaded as the default view, so its URL stays clean.
+  function go(date) {
+    load(date === state.dates[state.dates.length - 1] ? '' : date, true);
+  }
+
   function step(delta) {
-    var i = state.dates.indexOf(state.current);
-    var target = state.dates[i + delta];
-    if (target) load(target === state.dates[state.dates.length - 1] ? '' : target, true);
+    var target = state.dates[state.dates.indexOf(state.current) + delta];
+    if (target) go(target);
   }
 
   el('prev').onclick = function() { step(-1); };
@@ -383,13 +510,15 @@
     });
     var html = '';
     Object.keys(byYear).sort().reverse().forEach(function(year) {
-      html += '<div class="year">' + year + '</div><div class="dates">';
+      html += '<section><div class="year">' + year + '</div><div class="dates">';
       byYear[year].forEach(function(d) {
         var p = d.split('-').map(Number);
         var label = new Date(p[0], p[1] - 1, p[2]).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-        html += '<button data-date="' + d + '"' + (d === state.current ? ' aria-current="date"' : '') + '>' + label + '</button>';
+        var tag = typeOf(state.specials[d]).tag;
+        html += '<button data-date="' + d + '"' + (d === state.current ? ' aria-current="date"' : '') + '>' + label +
+          (tag ? '<span class="tag">' + esc(tag) + '</span>' : '') + '</button>';
       });
-      html += '</div>';
+      html += '</div></section>';
     });
     el('pickerBody').innerHTML = html;
     el('picker').showModal();
@@ -398,10 +527,10 @@
   };
 
   el('pickerBody').onclick = function(e) {
-    var d = e.target.getAttribute('data-date');
-    if (!d) return;
+    var btn = e.target.closest('[data-date]');
+    if (!btn) return;
     el('picker').close();
-    load(d === state.dates[state.dates.length - 1] ? '' : d, true);
+    go(btn.getAttribute('data-date'));
   };
   el('pickerClose').onclick = function() { el('picker').close(); };
   el('picker').addEventListener('click', function(e) { if (e.target === el('picker')) el('picker').close(); });
