@@ -122,6 +122,18 @@ page; edit its text there. The meeting time ("Sundays at 12:00pm") comes from th
 Sacrament meeting time…** sets it right away or schedules it to start on a date (e.g. next year's time on
 Jan 1). It's saved invisibly on the spreadsheet (developer metadata) and shows within ~5 minutes.
 
+## Usage counts
+
+Anonymous, no outside service: each browser gets a random ID (`stats.js`; nothing personal is sent) and every page
+open is counted by the ProgramAdmin script (`Stats.js`).
+
+- **Year tab, Sundays:** that Sunday's row gets **Site Visitors** (unique devices that day) and **During Meeting**
+  (devices that opened the site from 15 minutes before the meeting time to 75 minutes after). Found by column
+  name; skipped if the columns aren't there.
+- **Hidden "Site Stats" tab:** one row per day (unique devices, new devices, during meeting, total / program /
+  bulletin / post views). **Hidden "Visit Log" tab:** one row per visit; trimmed to ~13 months each month.
+- Counts are devices, not people. Open any page with `?nostats=1` to leave your own phone out (`?nostats=0` undoes it).
+
 ## Sharing a specific week
 
 Add `?date=YYYY-MM-DD`, for example https://trioaksward.github.io/program/?date=2026-02-08
