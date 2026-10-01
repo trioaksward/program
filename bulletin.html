@@ -71,6 +71,7 @@
   <div id="view"><div class="status">Loading…</div></div>
 </main>
 <script src="footer.js"></script>
+<script src="stats.js"></script>
 
 <script>
   // Ward Bulletin: posts from the program sheet's Bulletin tab plus the Member Spotlights folder, served by the
@@ -183,7 +184,9 @@
   }
 
   // html comes from the server, with any {{members-only}} parts already locked unless the password was given.
+  var tracked = {};                                     // count each post once per page open
   function renderPost(p, html) {
+    if (!tracked[p.id] && window.trackVisit) { tracked[p.id] = true; trackVisit('post', p.title); }
     var full = data.posts.filter(function(x) { return x.id === p.id; })[0] || p;
     var locked = (p.hasPrivate || full.hasPrivate) && !data.unlocked;
     view.innerHTML = '<a class="back" href="#">← Bulletin</a><article><h1>' + esc(p.title) + '</h1>' +
@@ -200,6 +203,7 @@
     if (id) showPost(id); else showList();
   }
   window.addEventListener('hashchange', route);
+  if (window.trackVisit) trackVisit('bulletin', filter !== 'All' ? filter : '');
   load();
 </script>
 </body>

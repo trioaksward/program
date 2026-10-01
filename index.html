@@ -230,6 +230,7 @@
   <div class="more"><a href="bulletin.html">Ward Bulletin</a><a href="bulletin.html?category=Member%20Spotlight">Member Spotlights</a><a href="https://local.churchofjesuschrist.org/en/units/us/ut/tri-oaks-ward" target="_blank" rel="noopener">Ward Events</a></div>
 </main>
 <script src="footer.js"></script>
+<script src="stats.js"></script>
 
 <dialog id="picker" aria-labelledby="pickerTitle">
   <div class="dlg-head">
@@ -641,6 +642,7 @@
 
   var initial = new URLSearchParams(location.search).get('date') || '';
   history.replaceState({ date: initial }, '', location.href);
+  if (window.trackVisit) trackVisit('program', initial ? 'date ' + initial : '');
   load(initial, false);
 </script>
 </body>
