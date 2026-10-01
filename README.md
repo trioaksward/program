@@ -125,14 +125,19 @@ Jan 1). It's saved invisibly on the spreadsheet (developer metadata) and shows w
 ## Usage counts
 
 Anonymous, no outside service: each browser gets a random ID (`stats.js`; nothing personal is sent) and every page
-open is counted by the ProgramAdmin script (`Stats.js`).
+open is logged by the ProgramAdmin script (`Stats.js`).
 
-- **Year tab, Sundays:** that Sunday's row gets **Site Visitors** (unique devices that day) and **During Meeting**
-  (devices that opened the site from 15 minutes before the meeting time to 75 minutes after). Found by column
-  name; skipped if the columns aren't there.
-- **Hidden "Site Stats" tab:** one row per day (unique devices, new devices, during meeting, total / program /
-  bulletin / post views). **Hidden "Visit Log" tab:** one row per visit; trimmed to ~13 months each month.
-- Counts are devices, not people. Open any page with `?nostats=1` to leave your own phone out (`?nostats=0` undoes it).
+- **Hidden "Visit Log" tab (the source of truth):** one row per visit, newest first: time, page, device, detail
+  (post title or date viewed), During meeting (Sundays, 15 minutes before the meeting time to 75 minutes after,
+  decided when logged), New device. Trimmed to ~13 months each month.
+- **Hidden "Site Stats" tab:** one row per day, recounted from the log after every visit (so deleting log rows
+  corrects that day on its next visit). Past days stay even after the log is trimmed.
+- **Year tab, Sundays:** **Site Visitors** and **During Meeting** for that Sunday (found by column name; skipped
+  if the columns aren't there).
+- Both stats tabs can be Tables (sort freely; columns are found by name). Counts are devices, not people. Open
+  any page with `?nostats=1` to leave your own device out (`?nostats=0` counts it again).
+- **Meeting time set late?** In Website → Sacrament meeting time…, choose **Starts: On** with the date it really
+  changed; Sundays since then get "During meeting" recounted. The Nov 1 new-year email also reminds about it.
 
 ## Sharing a specific week
 
