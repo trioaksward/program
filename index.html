@@ -292,8 +292,19 @@
 
   // ── Data ────────────────────────────────────────────────────────────────
 
+  // A saved copy is only reused while it still belongs to this week, i.e. it was saved for the same
+  // upcoming Sunday. After that it's out of date, so we show "Loading…" and wait for the sheet instead.
   function cacheGet(key) {
-    try { return JSON.parse(localStorage.getItem(CACHE_PREFIX + key)); } catch (e) { return null; }
+    try {
+      var data = JSON.parse(localStorage.getItem(CACHE_PREFIX + key));
+      return data && data.upcoming === upcomingSunday() ? data : null;
+    } catch (e) { return null; }
+  }
+  // Today if it's Sunday, otherwise the next Sunday (YYYY-MM-DD, this device's local time).
+  function upcomingSunday() {
+    var d = new Date();
+    d.setDate(d.getDate() + (7 - d.getDay()) % 7);
+    return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2);
   }
   function cacheSet(key, data) {
     try { localStorage.setItem(CACHE_PREFIX + key, JSON.stringify(data)); } catch (e) {}
